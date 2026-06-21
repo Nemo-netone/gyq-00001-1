@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>网页剪贴板</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>📋 网页剪贴板</h1>
+      <p class="subtitle">保存你复制过的文字，随时查看和复用</p>
+    </header>
+
+    <section class="input-section">
+      <textarea
+        id="clipInput"
+        placeholder="把要保存的文字粘贴到这里..."
+        rows="4"
+      ></textarea>
+      <div class="input-actions">
+        <button id="addBtn" class="btn btn-primary">保存内容</button>
+        <span id="charCount" class="char-count">0 字</span>
+      </div>
+    </section>
+
+    <section class="list-section">
+      <div class="list-header">
+        <h2>已保存的内容 <span id="totalCount" class="badge">0</span></h2>
+      </div>
+      <div id="clipList" class="clip-list">
+        <div class="empty-state">
+          <p>暂无内容，粘贴一段文字开始使用吧！</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

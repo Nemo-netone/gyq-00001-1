@@ -74,6 +74,25 @@ app.get('/api/clips', (req, res) => {
   res.json(clips);
 });
 
+app.get('/api/clips/search', (req, res) => {
+  const keyword = req.query.keyword;
+  if (!keyword || typeof keyword !== 'string' || keyword.trim() === '') {
+    return res.status(400).json({ error: '搜索关键词不能为空' });
+  }
+
+  const trimmedKeyword = keyword.trim().toLowerCase();
+  const stmt = db.prepare(
+    'SELECT * FROM clips WHERE LOWER(content) LIKE ? ORDER BY sort_order DESC'
+  );
+  stmt.bind([`%${trimmedKeyword}%`]);
+  const results = [];
+  while (stmt.step()) {
+    results.push(stmt.getAsObject());
+  }
+  stmt.free();
+  res.json(results);
+});
+
 app.post('/api/clips', (req, res) => {
   const { content } = req.body;
   if (!content || typeof content !== 'string' || content.trim() === '') {

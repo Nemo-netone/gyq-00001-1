@@ -59,6 +59,30 @@ GET /api/clips
 
 按 sort_order 降序排列（最新的在最前。
 
+### 1.5 搜索剪贴内容
+
+```
+GET /api/clips/search?keyword=xxx
+```
+
+**参数**：
+- `keyword`：搜索关键词（URL 编码）
+
+**响应**：返回内容中包含关键词的所有条目，不区分大小写，按 sort_order 降序排列。
+
+**响应示例**：
+```json
+[
+  {
+    "id": 1,
+    "content": "示例内容包含关键词",
+    "created_at": 1700000000000,
+    "last_copied_at": null,
+    "sort_order": 2
+  }
+]
+```
+
 ### 2. 新增剪贴内容
 
 ```

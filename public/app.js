@@ -1,7 +1,10 @@
 const API_BASE = '/api/clips';
 
+let allClips = [];
 let clips = [];
 let selectedIndex = -1;
+let searchKeyword = '';
+let searchTimer = null;
 
 const clipInput = document.getElementById('clipInput');
 const addBtn = document.getElementById('addBtn');
@@ -9,12 +12,30 @@ const charCount = document.getElementById('charCount');
 const clipList = document.getElementById('clipList');
 const totalCount = document.getElementById('totalCount');
 const toast = document.getElementById('toast');
+const searchInput = document.getElementById('searchInput');
+const clearSearchBtn = document.getElementById('clearSearchBtn');
 
 clipInput.addEventListener('input', () => {
   charCount.textContent = `${clipInput.value.length} 字`;
 });
 
 addBtn.addEventListener('click', addClip);
+
+searchInput.addEventListener('input', () => {
+  const keyword = searchInput.value.trim();
+  clearSearchBtn.style.display = keyword ? 'inline-block' : 'none';
+
+  if (searchTimer) clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => {
+    performSearch(keyword);
+  }, 200);
+});
+
+clearSearchBtn.addEventListener('click', () => {
+  searchInput.value = '';
+  clearSearchBtn.style.display = 'none';
+  performSearch('');
+});
 
 clipInput.addEventListener('keydown', (e) => {
   if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
@@ -23,7 +44,7 @@ clipInput.addEventListener('keydown', (e) => {
 });
 
 document.addEventListener('keydown', (e) => {
-  if (document.activeElement === clipInput) return;
+  if (document.activeElement === clipInput || document.activeElement === searchInput) return;
 
   if (e.key === 'ArrowUp') {
     e.preventDefault();
@@ -65,14 +86,47 @@ function formatTime(timestamp) {
 async function fetchClips() {
   try {
     const res = await fetch(API_BASE);
+    allClips = await res.json();
+    if (searchKeyword) {
+      await performSearch(searchKeyword);
+    } else {
+      clips = [...allClips];
+      if (selectedIndex >= clips.length) {
+        selectedIndex = clips.length - 1;
+      }
+      renderClips();
+    }
+  } catch (err) {
+    showToast('加载失败', 'error');
+    console.error(err);
+  }
+}
+
+async function performSearch(keyword) {
+  searchKeyword = keyword;
+
+  if (!keyword) {
+    clips = [...allClips];
+    if (selectedIndex >= clips.length) {
+      selectedIndex = clips.length - 1;
+    }
+    renderClips();
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/search?keyword=${encodeURIComponent(keyword)}`);
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.error || '搜索失败');
+    }
     clips = await res.json();
     if (selectedIndex >= clips.length) {
       selectedIndex = clips.length - 1;
     }
     renderClips();
   } catch (err) {
-    showToast('加载失败', 'error');
-    console.error(err);
+    showToast(err.message || '搜索失败', 'error');
   }
 }
 
@@ -141,10 +195,15 @@ async function moveClip(id, direction) {
       const data = await res.json();
       throw new Error(data.error || '移动失败');
     }
-    clips = await res.json();
-    const newIndex = clips.findIndex(c => c.id === id);
-    if (newIndex >= 0) selectedIndex = newIndex;
-    renderClips();
+    allClips = await res.json();
+    if (searchKeyword) {
+      await performSearch(searchKeyword);
+    } else {
+      clips = [...allClips];
+      const newIndex = clips.findIndex(c => c.id === id);
+      if (newIndex >= 0) selectedIndex = newIndex;
+      renderClips();
+    }
   } catch (err) {
     showToast(err.message || '移动失败', 'error');
   }
@@ -168,11 +227,20 @@ function renderClips() {
   totalCount.textContent = clips.length;
 
   if (clips.length === 0) {
-    clipList.innerHTML = `
-      <div class="empty-state">
-        <p>暂无内容，粘贴一段文字开始使用吧！</p>
-      </div>
-    `;
+    if (searchKeyword) {
+      clipList.innerHTML = `
+        <div class="empty-state">
+          <p>没有找到包含 "<strong>${escapeHtml(searchKeyword)}</strong>" 的内容</p>
+          <p style="margin-top: 8px; color: #888; font-size: 13px;">试试其他关键词，或点击清空按钮查看全部</p>
+        </div>
+      `;
+    } else {
+      clipList.innerHTML = `
+        <div class="empty-state">
+          <p>暂无内容，粘贴一段文字开始使用吧！</p>
+        </div>
+      `;
+    }
     return;
   }
 

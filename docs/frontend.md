@@ -23,14 +23,17 @@ public/
 页面由以下主要部分组成：
 
 1. **Header 头部**：标题和副标题
-2. **Input Section 输入区**：
+2. **Search Section 搜索区**：
+   - 搜索输入框
+   - 清空按钮
+3. **Input Section 输入区**：
    - 多行文本输入框（textarea）
    - 保存按钮
    - 字数统计
-3. **List Section 列表区**：
+4. **List Section 列表区**：
    - 标题 + 总数徽章
    - 剪贴内容列表（动态渲染）
-4. **Toast 提示**：全局消息提示组件
+5. **Toast 提示**：全局消息提示组件
 
 ## 样式设计 (style.css)
 
